@@ -8,13 +8,14 @@ Authors@R: c(
  person("Shweta", "Gopaulakrishnan", role = c("aut"), email = "reshg@channing.harvard.edu"),
  person("Vincent", "Carey", role = c("aut"), email = "stvjc@channing.harvard.edu")
  )
-Suggests: knitr, testthat, BiocStyle
-Imports: S4Vectors, httr, rjson, utils
+Suggests: knitr, testthat, BiocStyle,
+    rmarkdown
+Imports: S4Vectors, httr, rjson, utils, base64enc
 Depends: R (>= 3.4), methods
 License: Artistic-2.0
 LazyLoad: yes
 BiocViews: infrastructure
 RoxygenNote: 6.0.1.9000
-Collate: h5serv.R indx.R 
+Collate: h5serv.R indx.R h5serv2.R 
 VignetteBuilder: knitr
 biocViews: DataImport, Software

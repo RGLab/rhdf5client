@@ -1,0 +1,45 @@
+---
+title: "Emulate rhdf5 Interface"
+author: "Samuela Pollack"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+There is a one-to-one correspondence between files and domains. The domain is set 
+in the server config file in `h5serv/server/config.py` file. The file name and directory
+name are prepended to that suffix. A data object with the file's root UUID is obtained
+with the `H5S_file` constructor:
+
+```{r}
+library(rhdf5client)
+ipaddr <- "54.210.86.221"    # from AWS
+fl <- H5S_file(paste0("http://",ipaddr,":5000"), "testfile.testdir.testh5serv.org")
+h5ls(fl)
+```
+
+Reading a dataset initializes an object that can be used to access the actual data. 
+No data is retrieved at this point.
+
+```{r}
+D <- h5read(fl, "/grp1/grp1a/dataA")
+```
+
+The `[` operator can be used to navigate the group hierarchy.
+
+```{r}
+grp <- H5S_group(fl@root, fl)
+g1 <- grp["grp1"]
+g1a <- g1["grp1a"]
+```
+
