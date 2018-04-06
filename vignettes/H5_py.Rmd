@@ -1,0 +1,98 @@
+---
+title: "Reticulate-based interface to h5pyd"
+author: "Samuela Pollack"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+This is a vignette to illustrate the use of reticulate to provide an R wrapper for the h5pyd Python module. 
+For testing purposes, a EC2 instance was built to run HDF5 server. The machine was built on ami-104ae36a, 
+the Anaconda on Ubuntu 16.04 and run on a t2.micro
+
+## Installation of h5serv
+
+```{bash, eval=FALSE}
+source activate h5serv
+pip install watchdog  
+git clone https://github.com/HDFGroup/hdf5-json.git
+cd hdf5-json
+python setup.py install
+git clone https://github.com/HDFGroup/h5serv.git
+```
+
+## HDF5 file and group structure
+
+The server was provided with some test files like this:
+
+```{python, eval=FALSE}
+import h5pyd as h5py
+import numpy as np
+
+domain = 'testfile.testdir.testh5serv.org'
+endpoint = 'http://54.163.70.239:5000'
+
+f = h5py.File(domain, "w", endpoint = endpoint)
+g1 = f.create_group('/grp1')
+g2 = f.create_group('/grp2')
+g1a = f.create_group('/grp1/grp1a')
+g1b = f.create_group('/grp1/grp1b')
+g2a = f.create_group('/grp2/grp2a')
+g2b = f.create_group('/grp2/grp2b')
+
+d1 = np.random.normal(0.0, 1.0, (10,10))
+d2 = np.random.randint(0, 100, (5,7,3))
+d3 = np.zeros((40, 20, 60), dtype=int)      # for testing 3D indexing
+for i in range(40):
+  for j in range(20):
+    for k in range(60):
+      d3[i, j, k] = i*100*100 + j*100 + k
+      
+ds1 = g1a.create_dataset('data1', (10,10), dtype=np.float64, data=d1)
+ds2 = g2a.create_dataset('data2', (5,7,3), dtype=np.int32, data=d2)
+ds3 = g2b.create_dataset('data3', (40,20,60), dtype=np.int32, data=d3)
+
+f.close()
+```
+
+The file `/grp2/grp2b/data3` is for debugging indexing problems, specifically 3-dimensional indexing problems. 
+The value in each cell is the concatenation of the cell's subscripts. I.e., `data3[25, 9, 18]` is `250918`
+
+
+## Start the h5serv
+The machine in its current configuration is available as public AMI ami-4c399031. 
+
+The first time the machine is launched, it will be necessary to open port 5000 for incoming 
+communication from anywhere. Then start the server like this:
+
+```{bash, eval=FALSE}
+source activate h5serv
+cd h5serv/server
+python app.py
+```
+
+Logging output will go to stdout. This helps with debugging.
+
+## Three-dimensional Indexing Example
+
+Note that the IP address in the endpoint will change whenever the server is restarted or relaunched.
+
+```{r, eval=FALSE}
+dn <- "testfile.testdir.testh5serv.org"
+ep <- "http://54.163.70.239:5000"
+src <- H5S_py_source(dn, ep)
+dset <- H5S_py_dset(src, '/grp2/grp2b/data3')
+ll <- list(c(2, 3), c(4, 6, 7), c(9, 10))
+v <- dset[ll]
+```
+

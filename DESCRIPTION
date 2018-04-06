@@ -16,6 +16,6 @@ License: Artistic-2.0
 LazyLoad: yes
 BiocViews: infrastructure
 RoxygenNote: 6.0.1.9000
-Collate: h5serv.R indx.R h5serv2.R 
+Collate: h5serv.R indx.R h5serv2.R  h5serv3.R
 VignetteBuilder: knitr
 biocViews: DataImport, Software
